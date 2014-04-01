@@ -1,0 +1,142 @@
+#!/usr/bin/perl
+#=============================================================================#
+# Program: parse_nmon                                                         #
+#  Author: Chad Kerner                                                        #
+#-----------------------------------------------------------------------------#
+# Purpose: This utility will parse an nmon log file so the data can be piped  #
+#          into a graphing program such as gnuplot.                           #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+# Options                                                                     #
+# -i <FILE>     Specify the nmon file to process.                             #
+# -k KEY        Specify the nmon key you want to analyze.                     #
+# -v            verbose mode                                                  #
+# --help        Print the help screen                                         #
+#-----------------------------------------------------------------------------#
+# History:                                                                    #
+# 20140401 - Chad Kerner - Initial Coding                                     #
+#=============================================================================#
+
+# Package Declarations
+use warnings;
+use strict;
+use Getopt::Long;
+use POSIX qw( strftime );
+use Data::Dumper;
+
+# Function Prototypes
+sub print_error($$);
+sub print_usage();
+sub process_options();
+sub print_stats($);
+sub process_stats($);
+
+# Variable Declarations
+$main::verbose = 0;
+@main::valid_keys = qw( CPU_ALL );
+%main::field_indexes = ( "CPU_ALL" => [ 1, 2, 3, 4, 5 ] );
+%main::report_headers = ( "CPU_ALL" => [ 'Interval', 'User', 'System', 'Wait', 'Idle' ] );
+
+# Program Subroutines
+sub print_error($$) {
+    my $err_level = $_[0];
+    my $err_msg = $_[1];
+
+    print("\nERROR: $err_msg\n\n");
+    exit $err_level;
+}
+
+
+sub print_usage() {
+    my $prog = `basename $0`;
+    chomp $prog;
+
+    print <<EOHELP;
+
+    Usage: $prog OPTIONS     
+
+    Option      Usage
+    -f FILE     File To Process
+    -k KEY      Key To Scan For
+    --stats|-s  Perform basic statistical analysis
+    -v          Verbose Mode
+
+    --help      This Help Screen
+
+EOHELP
+
+    exit 0;
+}
+
+sub process_options() {
+    my $options = GetOptions(  "i=s"     => \$main::input_file,
+                               "k=s"     => \$main::scan_key,
+                               "v"       => \$main::verbose,
+                               "s"       => \$main::stats,
+                               "stats"   => \$main::stats,
+                               "help"    => sub { print_usage() },
+                            );
+   
+    if( ! $main::scan_key ) { print_error(2,"No scan key specified."); }
+    if( ! grep( /^$main::scan_key$/, @main::valid_keys ) ) { 
+        print_error(3, "Invalid scan key specified: $main::scan_key."); 
+    }
+    if( ! $main::input_file ) { print_error(4, "No input file specified."); }
+
+    return;
+}
+
+sub print_stats($) {
+    my $ara = @{$_[0]};
+    return;
+}
+
+sub process_stats($) {
+    my $ara = @{$_[0]};
+    return;
+}
+
+
+# Main Code Block
+{
+    my $tot_recs = 0;
+    my $key_recs = 0;
+    my @ara;
+    my $key;
+    my $out_str = "";
+
+    process_options();
+
+    if( ! -f $main::input_file ) {
+        print_error(1,"The input file: $main::input_file does not exist.");
+    }
+
+    open(INFIL, "$main::input_file") || die("Error on file: $main::input_file - $!");
+    RECORD: while (<INFIL>) {
+        chomp;
+
+        $tot_recs++;
+
+        next RECORD if ! m/^$main::scan_key\,T/;
+
+        $key_recs++;
+        @ara = split(/\,/, $_);
+        foreach $key ( @{$main::field_indexes{"$main::scan_key"}} ) {
+            $out_str = $out_str . $ara[$key] . ',';
+        }
+        $out_str =~ s/\,$//g;
+        print STDOUT "$out_str\n";
+        $out_str = '';
+
+        if( $main::stats ) { process_stats(@ara); }
+    }
+    close(INFIL);
+
+    print STDERR "Processed $key_recs out of $tot_recs\n";
+
+    if( $main::stats ) { print_stats(@ara); }
+
+    exit 0;
+}
+
+
