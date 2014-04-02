@@ -5,7 +5,11 @@ MYHOST=$2
 MYDATE=$3
 INFILE=$4
 
-GNUPLOT=`which gnuplot`
+GNUPLOT=`which gnuplot 2>/dev/null`
+if [ "x${GNUPLOT}" == "x" ] ; then
+   echo "GNUPLOT is not installed..."
+   exit 1
+fi
 
 if [ "x${INFILE}" == "x" ] ; then
    LOGFILE="nmon.out"

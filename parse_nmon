@@ -33,9 +33,11 @@ sub process_stats($);
 
 # Variable Declarations
 $main::verbose = 0;
-@main::valid_keys = qw( CPU_ALL );
-%main::field_indexes = ( "CPU_ALL" => [ 1, 2, 3, 4, 5 ] );
-%main::report_headers = ( "CPU_ALL" => [ 'Interval', 'User', 'System', 'Wait', 'Idle' ] );
+@main::valid_keys = qw( CPU_ALL MEM );
+%main::field_indexes = ( "CPU_ALL" => [ 1, 2, 3, 4, 5 ],
+                         "MEM" => [ 1, 2, 6, 10, 11, 13, 14, 5, 9 ] );
+%main::report_headers = ( "CPU_ALL" => [ 'Interval', 'User', 'System', 'Wait', 'Idle' ],
+                          "MEM" => [ 'Interval', 'Mem Total', 'Mem Free', 'Shared', 'Cached', 'Big Free', 'Buffers', 'Swap Total', 'Swap Free' ] );
 
 # Program Subroutines
 sub print_error($$) {
