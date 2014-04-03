@@ -83,21 +83,6 @@ function validate_options {
 
 }
 
-function configure_plot {
-   if [ "${SCANKEY}" == "CPU_ALL" ] ; then
-      YLABEL='CPU Usage(Percent)'
-      TITLE='CPU Utilization'
-      PLOTLINES=`cat <<EOP
-plot "${LOGFILE}" using 3 title 'User %' with lines, \
-     "${LOGFILE}" using 4 title 'System %' with lines, \
-     "${LOGFILE}" using 5 title 'Wait %' with lines, \
-     "${LOGFILE}" using 6 title 'Idle %' with lines 
-EOP`
-   else
-     print_error "Scan Key: ${SCANKEY} not valid."
-   fi
-}
-
 # Process the command line options ( I hate getopt...)
 function process_options {
    while [ $# -gt 0 ]
@@ -115,19 +100,35 @@ function process_options {
    done
 }
 
+function configure_plot {
+   if [ "${SCANKEY}" == "CPU_ALL" ] ; then
+      XLABEL="Time Interval (Minutes)"
+      YLABEL="CPU Usage(Percent)"
+      TITLE="CPU Utilization - ${MYHOST} - ${MYDATE}"
+      PLOTLINES=`cat <<EOP
+plot "${LOGFILE}" using 3 title 'User %' with lines, \
+     "${LOGFILE}" using 4 title 'System %' with lines, \
+     "${LOGFILE}" using 5 title 'Wait %' with lines, \
+     "${LOGFILE}" using 6 title 'Idle %' with lines 
+EOP`
+   else
+     print_error "Scan Key: ${SCANKEY} not valid."
+   fi
+}
+
 function plot_graph {
    ${GNUPLOT} <<EOF
 set timefmt "%Y-%m-%d:%H:%M"
 set yrange [0:]
 set xrange [0:1450]
-set xlabel "Time Interval (Minutes)"
+set xlabel "${XLABEL}"
 set grid
 set datafile separator ","
 set key left box
 set terminal dumb
 set xtics out nomirror
 set ylabel "${YLABEL}"
-set title "${TITLE} - ${MYHOST} - ${MYDATE}"
+set title "${TITLE}"
 ${PLOTLINES}
 set terminal png size 600,400
 set output "${PNGFILE}"
@@ -166,10 +167,4 @@ EOF
 
 # Exit gracefully
 exit 0
-
-
-
-
-
-
 
