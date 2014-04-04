@@ -1,0 +1,16 @@
+set timefmt "%Y-%m-%d:%H:%M"
+set yrange [0:]
+set xrange [0:1450]
+set grid
+set datafile separator ","
+set key left box
+set terminal dumb
+set xtics out nomirror
+set xlabel "Time Interval in Minutes"
+set ylabel "Memory (Gb)"
+set title "Memory Graph (Gb) - ###MYHOST### - ###MYDATE###"
+plot "###LOGFILE###" using 3 title 'Total Memory' with lines, \
+     "###LOGFILE###" using ($3-$7) title 'Memory Used' with lines
+set terminal png size 600,400
+set output "###PNGFILE###"
+replot
