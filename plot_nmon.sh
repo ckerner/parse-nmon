@@ -5,10 +5,6 @@ AUTHOR='Chad Kerner'
 AUTHOR_EMAIL='ckerner@illinois.edu'
 VERSION='0.1'
 
-LOGFILE="/tmp/nmon.log.$$"
-GNUFILE="/tmp/gnuplot.input.$$"
-VALID_KEYS='CPU_ALL'
-DEBUG=0
 
 # Print the usage screen
 function print_usage {
@@ -29,13 +25,22 @@ function print_usage {
    -k|--key        Specify the key value for the data you want to graph
                    Valid Keys: ${VALID_KEYS}
 
+   --xlabel        Set the label for the X-Axis
+   --ylabel        Set the label for the Y-Axis
+   --title         Set the title for the graph 
    -D|--debug      Turn on debugging for this script.  This is very detailed(set -x).
 
    -?|--help       This help screen
    -V|--version    Print the program version.
 
 EOHELP
+}
 
+function init_routine {
+   LOGFILE="/tmp/nmon.log.$$"
+   GNUFILE="/tmp/gnuplot.input.$$"
+   DEBUG=0
+   VALID_KEYS=`ls gnuplot.* | sed -e 's/gnuplot\.//g'`
 }
 
 function print_error {
@@ -81,7 +86,7 @@ function validate_options {
    fi
 
    if [ ! -f ${PLOTFILE} ] ; then
-      print_error "The input file: ${PLOTFILE} does not exist..."
+      print_error "The report file: ${PLOTFILE} does not exist..."
    fi
 
    # Lets see if gnuplot is even installed in the path
@@ -114,7 +119,6 @@ function process_options {
 }
 
 function plot_graph {
-   set -x
    cat ${PLOTFILE} | \
        sed -e s/###TITLE###/${TITLE}/g | \
        sed -e s/###XLABEL###/${XLABEL}/g | \
@@ -129,6 +133,9 @@ function plot_graph {
 
 # Main Code Block
 {
+   # Do some basic initialization
+   init_routine
+
    # Process the command line options
    process_options $*
 
