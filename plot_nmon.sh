@@ -6,6 +6,7 @@ AUTHOR_EMAIL='ckerner@illinois.edu'
 VERSION='0.1'
 
 LOGFILE="/tmp/nmon.log.$$"
+GNUFILE="/tmp/gnuplot.input.$$"
 VALID_KEYS='CPU_ALL'
 DEBUG=0
 
@@ -100,7 +101,10 @@ function process_options {
          -i|--input)   shift ; INFILE=$1 ;;
          -o|--output)  shift ; PNGFILE=$1 ;;
          -k|--key)     shift ; SCANKEY=$1 ;;
-         -p|--plot)    shift ; PLOTFILE=$1 ;;
+         -r|--report)  shift ; PLOTFILE=$1 ;;
+         --xlabel)     shift ; XLABEL=$1 ;;
+         --ylabel)     shift ; YLABEL=$1 ;;
+         --title)      shift ; TITLE=$1 ;;
          -D|--debug)   DEBUG=1 ;;
          -?|--help)    print_usage ; exit 0 ;;
          -v|--version) print_version ; exit 0 ;;
@@ -110,25 +114,17 @@ function process_options {
 }
 
 function plot_graph {
-   source ${PLOTFILE}
+   set -x
+   cat ${PLOTFILE} | \
+       sed -e s/###TITLE###/${TITLE}/g | \
+       sed -e s/###XLABEL###/${XLABEL}/g | \
+       sed -e s/###YLABEL###/${YLABEL}/g | \
+       sed -e s/###MYHOST###/${MYHOST}/g | \
+       sed -e s/###MYDATE###/${MYDATE}/g | \
+       sed -e s_###LOGFILE###_${LOGFILE}_g | \
+       sed -e s_###PNGFILE###_${PNGFILE}_g > ${GNUFILE}
 
-   ${GNUPLOT} <<EOF
-set timefmt "%Y-%m-%d:%H:%M"
-set yrange [0:]
-set xrange [0:1450]
-set xlabel "${XLABEL}"
-set grid
-set datafile separator ","
-set key left box
-set terminal dumb
-set xtics out nomirror
-set ylabel "${YLABEL}"
-set title "${TITLE}"
-${PLOTLINES}
-set terminal png size 600,400
-set output "${PNGFILE}"
-replot
-EOF
+   ${GNUPLOT} ${GNUFILE}
 }
 
 # Main Code Block
@@ -155,6 +151,7 @@ EOF
    plot_graph
 
    rm -f ${LOGFILE} >/dev/null 2>&1
+   rm -f ${GNUFILE} >/dev/null 2>&1
 }
 
 # Exit gracefully
