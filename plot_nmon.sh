@@ -75,6 +75,14 @@ function validate_options {
       print_error "${SCANKEY} is an invalid search key."
    fi
 
+   if [ "x${PLOTFILE}" == "x" ] ; then
+      PLOTFILE="gnuplot.${SCANKEY}"
+   fi
+
+   if [ ! -f ${PLOTFILE} ] ; then
+      print_error "The input file: ${PLOTFILE} does not exist..."
+   fi
+
    # Lets see if gnuplot is even installed in the path
    GNUPLOT=`which gnuplot 2>/dev/null`
    if [ "x${GNUPLOT}" == "x" ] ; then
@@ -92,6 +100,7 @@ function process_options {
          -i|--input)   shift ; INFILE=$1 ;;
          -o|--output)  shift ; PNGFILE=$1 ;;
          -k|--key)     shift ; SCANKEY=$1 ;;
+         -p|--plot)    shift ; PLOTFILE=$1 ;;
          -D|--debug)   DEBUG=1 ;;
          -?|--help)    print_usage ; exit 0 ;;
          -v|--version) print_version ; exit 0 ;;
@@ -100,23 +109,9 @@ function process_options {
    done
 }
 
-function configure_plot {
-   if [ "${SCANKEY}" == "CPU_ALL" ] ; then
-      XLABEL="Time Interval (Minutes)"
-      YLABEL="CPU Usage(Percent)"
-      TITLE="CPU Utilization - ${MYHOST} - ${MYDATE}"
-      PLOTLINES=`cat <<EOP
-plot "${LOGFILE}" using 3 title 'User %' with lines, \
-     "${LOGFILE}" using 4 title 'System %' with lines, \
-     "${LOGFILE}" using 5 title 'Wait %' with lines, \
-     "${LOGFILE}" using 6 title 'Idle %' with lines 
-EOP`
-   else
-     print_error "Scan Key: ${SCANKEY} not valid."
-   fi
-}
-
 function plot_graph {
+   source ${PLOTFILE}
+
    ${GNUPLOT} <<EOF
 set timefmt "%Y-%m-%d:%H:%M"
 set yrange [0:]
@@ -148,9 +143,6 @@ EOF
    if [ ${DEBUG} -eq 1 ] ; then
       set -x
    fi
-
-   # Configure the plot titles, labels and plot lines based off of scan key
-   configure_plot
 
    # Get the data, discard the headers
    grep -E "${SCANKEY},T" ${INFILE} > ${LOGFILE}
