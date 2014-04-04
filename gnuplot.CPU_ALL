@@ -1,0 +1,18 @@
+#
+# This is a report file to feed into the gnuplot.  You can make your own custom file
+# or use the defaults.  You can use the following variables inside of a file:
+# MYHOST - Sets the hostname in the title
+# MYDATE - Sets the date to be used int he title
+#
+# LOGFILE - Sets the name of the log file to be processed. Do not change this or you will break it.
+#
+      XLABEL="Time Interval (Minutes)"
+      YLABEL="CPU Usage(Percent)"
+      TITLE="CPU Utilization - ${MYHOST} - ${MYDATE}"
+      PLOTLINES=`cat <<EOP
+plot "${LOGFILE}" using 3 title 'User %' with lines, \
+     "${LOGFILE}" using 4 title 'System %' with lines, \
+     "${LOGFILE}" using 5 title 'Wait %' with lines, \
+     "${LOGFILE}" using 6 title 'Idle %' with lines 
+EOP`
+
