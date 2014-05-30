@@ -1,0 +1,19 @@
+#!/bin/bash
+
+INTIME=$1
+if [ "x${INTIME}" == "x" ] ; then
+   INTIME=`date +"%H:%M"`
+fi
+
+if [ "${INTIME:0:1}" == "T" ] ; then
+   TICKS=${INTIME:1}
+   HOUR=$(echo "${TICKS} / 60 " | bc )
+   MINS=$(echo "${TICKS} % 60 " | bc )
+   printf "%2d:%02d\n" ${HOUR} ${MINS}
+else
+   HOUR=`echo ${INTIME} | awk -F: '{print($1)}'`
+   MINS=`echo ${INTIME} | awk -F: '{print($2)}'`
+   TICKS=$(echo "( ${HOUR} * 60 ) + ${MINS}" | bc )
+   printf "T%04d\n" ${TICKS}
+fi
+
